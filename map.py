@@ -1,3 +1,4 @@
+from math import sqrt
 import numpy as np 
 
 INT_MAX = 1e6 
@@ -37,13 +38,42 @@ class Map():
         self.edges.append([])
     
     def addEdge(self,n1:str,n2:str):
-        node1:Node = self.mapping[n1]
-        node2:Node = self.mapping[n2]
-        no = list(set(node1.no),set(node2.no))
-        edge1 = Edge(n2,no=no)
-        edge2 = Edge(n1,no=no)
-        self.edges[n1].append(edge1)
-        self.edges[n2].append(edge2)
+        index1 = self.mapping[n1]
+        index2 = self.mapping[n2]
+        node1:Node = self.nodes[index1]
+        node2:Node = self.nodes[index2]
+        no = list(set(node1.no)&set(node2.no))
+        edge1 = Edge(index2,no=no)
+        edge2 = Edge(index1,no=no)
+
+        def distance(p1:vec2,p2:vec2):
+            return sqrt((p1.x - p2.x)**2 + (p1.y-p2.y)**2)
+
+        edge1.dist = distance(node1.pos,node2.pos) 
+        edge2.dist = edge1.dist
+        self.edges[self.mapping[n1]].append(edge1)
+        self.edges[self.mapping[n2]].append(edge2)
+    
+    def fromFile(self,nodefile,edgefile):
+        file = open(nodefile,"r")
+        lines = file.readlines()
+
+        for line in lines:
+            el = line.strip().split(" ")
+            name = el[0] 
+            pos = vec2(float(el[1]),float(el[2]))
+            no = el[3:]
+            self.addNode(name,pos,no)
+        
+        file.close()
+
+        file = open(edgefile,"r")
+        lines = file.readlines()
+        for line in lines:
+            el = line.strip().split(" ")
+            n1 = el[0]
+            n2 = el[1] 
+            self.addEdge(n1,n2)
     
     def Dijkstra(self,src:str,dst:str):
         src_index = self.mapping(src)
@@ -80,3 +110,12 @@ class Map():
             temp = self.pathRecord[temp]
         self.shortestPath.append(src_index)
         self.shortestPath.reverse()
+
+if __name__ == "__main__":
+    m = Map()
+    m.fromFile("./node.txt","./edge.txt")
+    for node in m.nodes:
+        print(node.name)
+    for node in m.edges:
+        for edge in node:
+            print(edge.to)
