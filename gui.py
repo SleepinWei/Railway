@@ -1,6 +1,7 @@
 import tkinter as tk 
 from tkinter import ttk as ttk 
-
+from map import Edge, Map, Node,vec2
+import numpy as np
 class GUI():
     def __init__(self,window) -> None:
         self.root = window 
@@ -9,6 +10,7 @@ class GUI():
         self.root.rowconfigure(0,weight=1)
         self.content.rowconfigure(0,weight=1)
         self.content.columnconfigure(0,weight=1)
+        self.map = Map() 
     
     def setWindow(self):
         self.content.grid(column=0,row=0,sticky="news")
@@ -36,6 +38,28 @@ class GUI():
         self.h.grid(column=0, row=1, sticky="we")
         self.v.grid(column=1, row=0, sticky="ns")
     
+    def drawMap(self):
+        map = self.map 
+
+        def drawNode(node:Node):
+            self.canvas.create_oval(node.pos.x,node.pos.y,fill="yellow",outline="purple",
+                tags=("nodes",node.name))
+        
+        def drawEdge(nodefrom:Node, edge:Edge):
+            pos1=  nodefrom.pos
+            pos2 = map.mapping[edge.to].pos
+            self.canvas.create_line(pos1.x,pos1.y,pos2.x,pos2.y,fill="black",smooth=True)
+        
+        for node in map.nodes:
+            drawNode(node)
+
+        # visited = np.zeros((len(map.nodes)))
+        for i in range(len(map.nodes)):
+            n = map.mapping[i]
+            # 画两遍，如何解决？
+            for edge in map.edges[i]:
+                drawEdge(n,edge)
+
     def setInputFrame(self):
         self.inputFrame = ttk.LabelFrame(self.content,text="Input")
         self.label1 = ttk.Label(self.inputFrame,text="test label")
