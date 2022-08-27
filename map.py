@@ -3,23 +3,23 @@ import numpy as np
 INT_MAX = 1e6 
 
 class vec2():
-    def __init__(self) -> None:
-        self.x = 0 
-        self.y = 0
+    def __init__(self,x=0,y=0) -> None:
+        self.x = x 
+        self.y = y
 
 class Node():
-    def __init__(self) -> None:
-        self.name : str = "" 
-        self.no = [] # 属于几号线
+    def __init__(self,name="",no =[],pos = vec2(0,0)) -> None:
+        self.name : str = name
+        self.no = no# 属于几号线 list() 
         # self.color = 0 
-        self.pos = vec2() 
+        self.pos = pos 
 
 class Edge():
-    def __init__(self) -> None:
+    def __init__(self,to=0,dist=0,no=0) -> None:
         # self.nodes = vec2() # 两端连接的节点，站点名称
-        self.to:int = 0 # 有向边指向的序号
-        self.dist:float = 0 
-        self.no: int = 0  # 属于几号线
+        self.to:int = to # 有向边指向的序号
+        self.dist:float = dist 
+        self.no = []  # 属于几号线
 
 class Map():
     def __init__(self) -> None:
@@ -29,6 +29,21 @@ class Map():
         self.shortestPath = [] 
         self.distArr = np.zeros((len(self.nodes),))
         self.visited = np.zeros((len(self.nodes),))
+    
+    def addNode(self,name:str,pos:vec2,no):
+        node = Node(name,pos=pos,no=no)
+        self.nodes.append(node)
+        self.mapping.update({name:len(self.nodes)-1})
+        self.edges.append([])
+    
+    def addEdge(self,n1:str,n2:str):
+        node1:Node = self.mapping[n1]
+        node2:Node = self.mapping[n2]
+        no = list(set(node1.no),set(node2.no))
+        edge1 = Edge(n2,no=no)
+        edge2 = Edge(n1,no=no)
+        self.edges[n1].append(edge1)
+        self.edges[n2].append(edge2)
     
     def Dijkstra(self,src:str,dst:str):
         src_index = self.mapping(src)
