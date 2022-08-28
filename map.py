@@ -114,8 +114,4 @@ class Map():
 if __name__ == "__main__":
     m = Map()
     m.fromFile("./node.txt","./edge.txt")
-    for node in m.nodes:
-        print(node.name)
-    for node in m.edges:
-        for edge in node:
-            print(edge.to)
+    print(m.mapping)
