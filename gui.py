@@ -26,7 +26,9 @@ class GUI():
         # size
         self.canvas["width"] = 1000
         self.canvas["height"] = 600
-        self.canvas["scrollregion"] = (0, 0, 2000, 2000)
+        self.canvas["scrollregion"] = (0, 0, 4000, 4000)
+        self.canvas.yview_moveto(0.25)
+        self.canvas.xview_moveto(0.25)
         self.canvas.configure(background="LightCyan")
 
         # commands
@@ -186,7 +188,7 @@ class GUI():
         self.setWindow() 
         self.setCanvas()
         self.setInputFrame()
-        self.map.fromFile("./node.txt","./edge.txt")
+        self.map.fromFile("./node1.txt","./edge1.txt")
         self.drawMap()
         self.root.mainloop()
 

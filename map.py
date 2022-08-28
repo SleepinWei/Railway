@@ -1,5 +1,7 @@
 from math import sqrt
+from random import random
 import numpy as np 
+from geopy.distance import geodesic
 
 INT_MAX = 1e6 
 
@@ -9,11 +11,12 @@ class vec2():
         self.y = y
 
 class Node():
-    def __init__(self,name="",no =[],pos = vec2(0,0)) -> None:
+    def __init__(self,name="",no =[],pos = vec2(0,0),apos:vec2 = vec2(0,0)) -> None:
         self.name : str = name
         self.no = no# 属于几号线 list() 
         # self.color = 0 
         self.pos = pos 
+        self.apos = apos  # x: 经度 y : 纬度
 
 class Edge():
     def __init__(self,to=0,dist=0,no=0) -> None:
@@ -31,11 +34,15 @@ class Map():
         self.distArr = np.zeros((len(self.nodes),))
         self.visited = np.zeros((len(self.nodes),))
     
-    def addNode(self,name:str,pos:vec2,no):
-        node = Node(name,pos=pos,no=no)
-        self.nodes.append(node)
-        self.mapping.update({name:len(self.nodes)-1})
-        self.edges.append([])
+    def addNode(self,name:str,apos:vec2,no):
+        if name in list(self.mapping.keys()):
+            node:Node = self.nodes[self.mapping[name]]
+            node.no.append(no[0])
+        else:
+            node = Node(name,apos=apos,no=no)
+            self.nodes.append(node)
+            self.mapping.update({name:len(self.nodes)-1})
+            self.edges.append([])
     
     def addEdge(self,n1:str,n2:str):
         index1 = self.mapping[n1]
@@ -47,9 +54,9 @@ class Map():
         edge2 = Edge(index1,no=no)
 
         def distance(p1:vec2,p2:vec2):
-            return sqrt((p1.x - p2.x)**2 + (p1.y-p2.y)**2)
+            return geodesic((p1.y,p1.x),(p2.y,p2.x)).m
 
-        edge1.dist = distance(node1.pos,node2.pos) 
+        edge1.dist = distance(node1.apos,node2.apos) 
         edge2.dist = edge1.dist
         self.edges[self.mapping[n1]].append(edge1)
         self.edges[self.mapping[n2]].append(edge2)
@@ -61,9 +68,9 @@ class Map():
         for line in lines:
             el = line.strip().split(" ")
             name = el[0] 
-            pos = vec2(float(el[1]),float(el[2]))
+            apos = vec2(float(el[1]),float(el[2]))
             no = el[3:]
-            self.addNode(name,pos,no)
+            self.addNode(name,apos=apos,no=no)
         
         file.close()
 
@@ -74,6 +81,24 @@ class Map():
             n1 = el[0]
             n2 = el[1] 
             self.addEdge(n1,n2)
+        file.close()
+        # 计算 像素位置 pos
+        minimum_x = INT_MAX 
+        maximum_x = 0 
+        minimum_y = INT_MAX
+        maximum_y = 0  
+        for node in self.nodes:
+            minimum_x = min(minimum_x,node.apos.x)
+            maximum_x = max(maximum_x,node.apos.x)
+            minimum_y = min(minimum_y,node.apos.y)
+            maximum_y = max(maximum_y,node.apos.y)
+        
+        for node in self.nodes:
+            t_x= 2500 / (maximum_x - minimum_x)
+            t_y = 2500 / (maximum_y - minimum_y)
+            t = max(t_x,t_y)
+            interval = 20
+            node.pos = vec2((node.apos.y - minimum_y) * t + interval,(node.apos.x - minimum_x) * t + interval)
     
     def Dijkstra(self,src:str,dst:str):
         src_index = self.mapping[src]
