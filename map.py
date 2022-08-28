@@ -76,11 +76,11 @@ class Map():
             self.addEdge(n1,n2)
     
     def Dijkstra(self,src:str,dst:str):
-        src_index = self.mapping(src)
-        dst_index = self.mapping(dst)
-        self.distArr = np.ones((len(self.nodes),)) * INT_MAX
-        self.visited = np.zeros((len(self.nodes),))
-        self.pathRecord = np.zeros((len(self.nodes),))
+        src_index = self.mapping[src]
+        dst_index = self.mapping[dst]
+        self.distArr = np.ones(len(self.nodes)) * INT_MAX
+        self.visited = np.zeros(len(self.nodes))
+        self.pathRecord = np.zeros(len(self.nodes))
         self.distArr[src_index] = 0
 
         for i in range(len(self.nodes)):
@@ -88,8 +88,8 @@ class Map():
             pos = -1 
             # find the minimum distance in the nodes left 
             for j in range(len(self.nodes)):
-                if not self.visited[j] and self.distArr[j] < minimum:
-                    minimum = self.distArr 
+                if (not self.visited[j]) and (self.distArr[j] < minimum):
+                    minimum = self.distArr[j]
                     pos = j 
             if pos == -1 : 
                 break # 不连通
@@ -103,12 +103,13 @@ class Map():
                         self.distArr[distedge.to] = self.distArr[pos] + self.edges[pos][j].dist 
                         self.pathRecord[distedge.to] = pos
         
-        self.shortestPath.append(dst_index)
-        temp = self.pathRecord[dst_index]
+        self.shortestPath.append(self.nodes[dst_index].name)
+        temp = int(self.pathRecord[dst_index])
+        # print(self.pathRecord)
         while temp != src_index:
-            self.shortestPath.append(temp) 
-            temp = self.pathRecord[temp]
-        self.shortestPath.append(src_index)
+            self.shortestPath.append(self.nodes[temp].name) 
+            temp = int(self.pathRecord[temp])
+        self.shortestPath.append(self.nodes[src_index].name)
         self.shortestPath.reverse()
 
 if __name__ == "__main__":

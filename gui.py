@@ -1,3 +1,5 @@
+from cgitb import text
+from re import search
 from socket import SO_RCVBUF
 import tkinter as tk 
 from tkinter import ttk as ttk 
@@ -127,13 +129,39 @@ class GUI():
             self.canvas.delete(tk.ALL)
             self.drawMap()
 
-        self.addNodeButton = ttk.Button(self.inputFrame,text="添加站点",command=addNode)
-        self.addEdgeButton = ttk.Button(self.inputFrame,text="添加边",command=addEdge)
+        self.addNodeButton = ttk.Button(self.stationFrame,text="添加站点",command=addNode)
+        self.addEdgeButton = ttk.Button(self.edgeFrame,text="添加边",command=addEdge)
+    
+        # 路径规划
+        self.pathFrame = ttk.LabelFrame(self.inputFrame,text="地铁换乘")
+        self.label6 = ttk.Label(self.pathFrame,text="起点")
+        self.label7 = ttk.Label(self.pathFrame,text="终点")
+        self.srcStation = tk.StringVar(value="A")
+        self.srcStationEntry = ttk.Entry(self.pathFrame,textvariable=self.srcStation)
+        self.dstStation = tk.StringVar(value="C")
+        self.dstStationEntry = ttk.Entry(self.pathFrame,textvariable=self.dstStation)
+        self.pathText = tk.Text(self.pathFrame,width=7,height=7)
+
+        def searchPath():
+            src = self.srcStationEntry.get().strip()
+            dst = self.dstStationEntry.get().strip()
+            self.map.Dijkstra(src,dst)
+            def pathToString(path):
+                s = "" 
+                for name in path: 
+                    s+=name 
+                    s+='\n'
+                return s
+            self.pathText.delete("0.0","end")
+            self.pathText.insert("0.0",pathToString(self.map.shortestPath))
+
+        self.searchButton = ttk.Button(self.pathFrame,text="规划路径",command=searchPath)
         
         # layout 
+
         self.inputFrame.grid(column=2,row=0,sticky="news")
         # self.label1.grid(column=0,row=0,sticky="nws")
-        self.stationFrame.grid(column=0,row=0,sticky="nws")
+        self.stationFrame.grid(column=0,row=1,sticky="nws")
         self.label3.grid(column=0,row=1,sticky="nws")
         self.nameEntry.grid(column=1,row=1,sticky="nws")
         self.label4.grid(column=0,row=2,sticky="nws")
@@ -142,11 +170,18 @@ class GUI():
         self.posEntry.grid(column=1,row=3,sticky="nws")
         self.addNodeButton.grid(column=0,row=4,sticky="nws")
 
-        self.edgeFrame.grid(column=0,row=5,sticky="nws")
+        self.edgeFrame.grid(column=0,row=2,sticky="nws")
         self.srcEntry.grid(column=0,row=6,sticky="nws")
         self.dstEntry.grid(column=1,row=6,sticky="nws")
         self.addEdgeButton.grid(column=0,row=7,sticky="nws")
     
+        self.pathFrame.grid(column=0,row=0,sticky="news")
+        self.label6.grid(column=0,row=0,sticky="nws")
+        self.label7.grid(column=0,row=1,sticky="nws")
+        self.srcStationEntry.grid(column=1,row=0,sticky="nws")
+        self.dstStationEntry.grid(column=1,row=1,sticky="nws")
+        self.searchButton.grid(column=0,row=2,sticky="nws")
+        self.pathText.grid(column=0,columnspan=2,row=3,sticky="nwes")
     def run(self):
         self.setWindow() 
         self.setCanvas()
