@@ -1,9 +1,6 @@
-from cgitb import text
-from re import search
-from socket import SO_RCVBUF
 import tkinter as tk 
 from tkinter import ttk as ttk 
-from map import Edge, Map, Node,vec2
+from map import Edge, Map, Node,vec2,COLOR
 import numpy as np
 class GUI():
     def __init__(self,window) -> None:
@@ -27,9 +24,9 @@ class GUI():
         self.canvas["width"] = 1000
         self.canvas["height"] = 600
         self.canvas["scrollregion"] = (0, 0, 4000, 4000)
-        self.canvas.yview_moveto(0.25)
-        self.canvas.xview_moveto(0.25)
-        self.canvas.configure(background="LightCyan")
+        self.canvas.yview_moveto(0.5)
+        self.canvas.xview_moveto(0.5)
+        self.canvas.configure(background="white")
 
         # commands
         self.h["command"] = self.canvas.xview
@@ -66,18 +63,24 @@ class GUI():
             text = self.canvas.create_text(node.pos.x - text_w,node.pos.y - text_h,text=node.name
                 )
             self.canvas.tag_bind(l,"<Enter>",on_enter)
+            self.canvas.tag_bind(l,"<1>",on_click)
             self.canvas.tag_bind(l,"<Leave>",on_leave)
         
         def drawEdge(nodefrom:Node, edge:Edge):
             pos1=  nodefrom.pos
             pos2 = map.nodes[edge.to].pos
-            l = self.canvas.create_line(pos1.x,pos1.y,pos2.x,pos2.y,fill="black",smooth=True,
-            tags=("edge",nodefrom.name,map.nodes[edge.to].name))
+            color = "black"
+            width = 3
+            if len(edge.no):
+                color = COLOR[edge.no[0]]
+            if nodefrom.onPath and  self.map.nodes[edge.to].onPath:
+                color = "red"
+                width =5
+            l = self.canvas.create_line(pos1.x,pos1.y,pos2.x,pos2.y,fill=color,smooth=True,
+            tags=("edge",nodefrom.name,map.nodes[edge.to].name),width=width)
             self.canvas.tag_bind(l,"<Enter>",on_enter)
             self.canvas.tag_bind(l,"<Leave>",on_leave)
 
-        for node in map.nodes:
-            drawNode(node)
 
         # visited = np.zeros((len(map.nodes)))
         for i in range(len(map.nodes)):
@@ -85,6 +88,9 @@ class GUI():
             # 画两遍，如何解决？
             for edge in map.edges[i]:
                 drawEdge(n,edge)
+
+        for node in map.nodes:
+            drawNode(node)
 
     def setInputFrame(self):
         self.inputFrame = ttk.LabelFrame(self.content,text="Input")
@@ -120,7 +126,7 @@ class GUI():
             name = self.nameEntry.get()
             no = parseNo(self.noEntry.get())
             pos = parsePos(self.posEntry.get())
-            self.map.addNode(name,pos,no)
+            self.map.addNode(name,pos,no=no)
             self.canvas.delete(tk.ALL)
             self.drawMap()
             
@@ -138,9 +144,9 @@ class GUI():
         self.pathFrame = ttk.LabelFrame(self.inputFrame,text="地铁换乘")
         self.label6 = ttk.Label(self.pathFrame,text="起点")
         self.label7 = ttk.Label(self.pathFrame,text="终点")
-        self.srcStation = tk.StringVar(value="A")
+        self.srcStation = tk.StringVar(value="港城路")
         self.srcStationEntry = ttk.Entry(self.pathFrame,textvariable=self.srcStation)
-        self.dstStation = tk.StringVar(value="C")
+        self.dstStation = tk.StringVar(value="延长路")
         self.dstStationEntry = ttk.Entry(self.pathFrame,textvariable=self.dstStation)
         self.pathText = tk.Text(self.pathFrame,width=7,height=7)
 
@@ -156,8 +162,18 @@ class GUI():
                 return s
             self.pathText.delete("0.0","end")
             self.pathText.insert("0.0",pathToString(self.map.shortestPath))
+            self.canvas.delete(tk.ALL)
+            self.drawMap()
 
         self.searchButton = ttk.Button(self.pathFrame,text="规划路径",command=searchPath)
+
+        self.statusFrame = ttk.LabelFrame(self.inputFrame,text="Status")
+        self.stationName = tk.StringVar(value="站点名称: ")
+        self.stationNameLabel = ttk.Label(self.statusFrame,textvariable=self.stationName)
+        self.stationNo = tk.StringVar(value="属于: ")
+        self.stationNoLabel = ttk.Label(self.statusFrame, textvariable=self.stationNo)
+        self.stationPos = tk.StringVar(value="经度: 纬度: ")
+        self.stationPosLabel = ttk.Label(self.statusFrame, textvariable=self.stationPos)
         
         # layout 
 
@@ -184,6 +200,12 @@ class GUI():
         self.dstStationEntry.grid(column=1,row=1,sticky="nws")
         self.searchButton.grid(column=0,row=2,sticky="nws")
         self.pathText.grid(column=0,columnspan=2,row=3,sticky="nwes")
+
+        # self.statusFrame.grid(column=0,row=5,sticky="news")
+        # self.stationNameLabel.grid(column=0,row=0,sticky="news")
+        # self.stationNoLabel.grid(column=0,row=1,sticky="nws")
+        # self.stationPosLabel.grid(column=0,row=2,sticky="nws")
+
     def run(self):
         self.setWindow() 
         self.setCanvas()
